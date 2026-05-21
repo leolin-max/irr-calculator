@@ -27,8 +27,8 @@ export interface IRRStore {
   removeMonth: (id: string) => void;
 
   reset: () => void;
-  loadFromStorage: () => void;
-  saveToStorage: () => void;
+  loadFromStorage: () => boolean;
+  saveToStorage: () => boolean;
 
   // 初始化
   initialize: () => void;
