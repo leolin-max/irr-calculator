@@ -1,3 +1,5 @@
+'use client';
+
 import { create } from 'zustand';
 import { MonthlyData, ChannelConfig, generateInitialData, DEFAULT_CHANNELS } from '@/components/irr-calculator/types';
 
@@ -125,6 +127,7 @@ export const useIRRStore = create<IRRStore>((set, get) => ({
   reset: () => set(getDefaultState()),
 
   loadFromStorage: () => {
+    if (typeof window === 'undefined') return false;
     const saved = localStorage.getItem('irr_calculator_data');
     if (saved) {
       try {
@@ -146,6 +149,7 @@ export const useIRRStore = create<IRRStore>((set, get) => ({
   },
 
   saveToStorage: () => {
+    if (typeof window === 'undefined') return false;
     const state = get();
     const data = {
       capitalCostRate: state.capitalCostRate,
@@ -165,6 +169,7 @@ export const useIRRStore = create<IRRStore>((set, get) => ({
   },
 
   initialize: () => {
+    if (typeof window === 'undefined') return;
     const state = get();
     // 初始化时尝试从存储加载，如果失败则使用默认状态
     if (state.monthlyData.length === 0) {
