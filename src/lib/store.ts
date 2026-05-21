@@ -4,33 +4,22 @@ import { create } from 'zustand';
 import { MonthlyData, ChannelConfig, generateInitialData, DEFAULT_CHANNELS } from '@/components/irr-calculator/types';
 
 export interface IRRStore {
-  // 参数状态
   capitalCostRate: number;
   cardFeeRate: number;
   scenicReturnTimes: number;
-
-  // 渠道状态
   channels: ChannelConfig[];
-
-  // 月度数据
   monthlyData: MonthlyData[];
 
-  // 动作
   setCapitalCostRate: (rate: number) => void;
   setCardFeeRate: (rate: number) => void;
   setScenicReturnTimes: (times: number) => void;
-
   updateChannel: (index: number, field: keyof ChannelConfig, value: string | number) => void;
-
   updateMonthData: (id: string, field: keyof MonthlyData, value: string | number) => void;
   addMonth: () => void;
   removeMonth: (id: string) => void;
-
   reset: () => void;
-  loadFromStorage: () => boolean;
-  saveToStorage: () => boolean;
-
-  // 初始化
+  loadFromStorage: () => void;
+  saveToStorage: () => void;
   initialize: () => void;
 }
 
@@ -71,7 +60,6 @@ export const useIRRStore = create<IRRStore>((set, get) => ({
           if (i === index) {
             return { ...m, date: value };
           }
-          // 对于后续行，重新计算日期
           let baseDate = new Date(value);
           baseDate.setMonth(baseDate.getMonth() + (i - index));
           return {
@@ -127,10 +115,10 @@ export const useIRRStore = create<IRRStore>((set, get) => ({
   reset: () => set(getDefaultState()),
 
   loadFromStorage: () => {
-    if (typeof window === 'undefined') return false;
-    const saved = localStorage.getItem('irr_calculator_data');
-    if (saved) {
-      try {
+    if (typeof window === 'undefined') return;
+    try {
+      const saved = localStorage.getItem('irr_calculator_data');
+      if (saved) {
         const data = JSON.parse(saved);
         set({
           capitalCostRate: data.capitalCostRate ?? 6,
@@ -139,39 +127,33 @@ export const useIRRStore = create<IRRStore>((set, get) => ({
           channels: data.channels ?? DEFAULT_CHANNELS,
           monthlyData: data.monthlyData ?? generateInitialData(new Date()),
         });
-        return true;
-      } catch (e) {
-        console.error('Failed to load from storage:', e);
-        return false;
       }
+    } catch (e) {
+      console.error('Failed to load from storage:', e);
     }
-    return false;
   },
 
   saveToStorage: () => {
-    if (typeof window === 'undefined') return false;
-    const state = get();
-    const data = {
-      capitalCostRate: state.capitalCostRate,
-      cardFeeRate: state.cardFeeRate,
-      scenicReturnTimes: state.scenicReturnTimes,
-      channels: state.channels,
-      monthlyData: state.monthlyData,
-      savedAt: new Date().toISOString(),
-    };
+    if (typeof window === 'undefined') return;
     try {
+      const state = get();
+      const data = {
+        capitalCostRate: state.capitalCostRate,
+        cardFeeRate: state.cardFeeRate,
+        scenicReturnTimes: state.scenicReturnTimes,
+        channels: state.channels,
+        monthlyData: state.monthlyData,
+        savedAt: new Date().toISOString(),
+      };
       localStorage.setItem('irr_calculator_data', JSON.stringify(data));
-      return true;
     } catch (e) {
       console.error('Failed to save to storage:', e);
-      return false;
     }
   },
 
   initialize: () => {
     if (typeof window === 'undefined') return;
     const state = get();
-    // 初始化时尝试从存储加载，如果失败则使用默认状态
     if (state.monthlyData.length === 0) {
       set(getDefaultState());
     }
